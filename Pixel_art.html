@@ -1,0 +1,1991 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>Pixel Art PRO — Tabs • Layers • Symmetry • Import • Animation</title>
+  <style>
+    :root{
+      --bg:#0b1220;
+      --panel:#0f172a;
+      --panel2:#111c33;
+      --text:#e5e7eb;
+      --muted:#9ca3af;
+      --border:rgba(255,255,255,.12);
+      --accent:#60a5fa;
+      --ok:#22c55e;
+      --warn:#f59e0b;
+      --danger:#ef4444;
+      --shadow: 0 18px 45px rgba(0,0,0,.35);
+      --tab:#0b1220;
+      --tab2:#0f172a;
+    }
+    [data-theme="light"]{
+      --bg:#f6f7fb;
+      --panel:#ffffff;
+      --panel2:#ffffff;
+      --text:#0f172a;
+      --muted:#475569;
+      --border:rgba(2,6,23,.12);
+      --accent:#2563eb;
+      --shadow: 0 18px 45px rgba(2,6,23,.10);
+      --tab:#e9eefb;
+      --tab2:#ffffff;
+    }
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      font-family: ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial;
+      background:
+        radial-gradient(1100px 700px at 15% -20%, rgba(96,165,250,.18), transparent 60%),
+        radial-gradient(900px 600px at 120% 0%, rgba(34,197,94,.12), transparent 55%),
+        var(--bg);
+      color: var(--text);
+      min-height:100vh;
+      user-select:none;
+    }
+    .app{ width:min(1500px, 96vw); margin: 14px auto 18px; display:flex; flex-direction:column; gap:12px; }
+
+    /* ===== Chrome-like Tabs ===== */
+    .tabsBar{
+      border:1px solid var(--border);
+      background: linear-gradient(180deg, rgba(255,255,255,.03), transparent), var(--panel);
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .tabsTop{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      padding: 10px 12px;
+      border-bottom:1px solid var(--border);
+      background: linear-gradient(180deg, rgba(255,255,255,.03), transparent), var(--panel2);
+    }
+    .brand{
+      display:flex; align-items:center; gap:10px; min-width: 240px;
+    }
+    .logo{
+      width:42px; height:42px;
+      border-radius: 14px;
+      display:grid; place-items:center;
+      border:1px solid var(--border);
+      background: linear-gradient(135deg, rgba(96,165,250,.25), rgba(34,197,94,.15));
+      font-size: 20px;
+    }
+    .brand h1{ margin:0; font-size:15px; letter-spacing:.2px; }
+    .brand p{ margin:2px 0 0; font-size:12px; color:var(--muted); }
+
+    .actions{ margin-left:auto; display:flex; gap:10px; align-items:center; flex-wrap:wrap; justify-content:flex-end; }
+    .btn, select, input[type="color"], input[type="text"]{
+      border:1px solid var(--border);
+      background: linear-gradient(180deg, rgba(255,255,255,.05), transparent), rgba(255,255,255,.02);
+      color: var(--text);
+      padding: 10px 12px;
+      border-radius: 12px;
+      cursor:pointer;
+      font-weight: 800;
+      font-size: 13px;
+      transition: transform .08s ease, border-color .2s ease, background .2s ease;
+    }
+    .btn:hover, select:hover{ transform: translateY(-1px); border-color: rgba(96,165,250,.35); }
+    .btn:active{ transform: translateY(0px); }
+    .btn.primary{ border-color: rgba(96,165,250,.45); background: linear-gradient(180deg, rgba(96,165,250,.22), rgba(96,165,250,.05)); }
+    .btn.ok{ border-color: rgba(34,197,94,.40); background: linear-gradient(180deg, rgba(34,197,94,.18), rgba(34,197,94,.05)); }
+    .btn.danger{ border-color: rgba(239,68,68,.40); background: linear-gradient(180deg, rgba(239,68,68,.18), rgba(239,68,68,.05)); }
+    .btn.mini{ padding: 8px 10px; font-size: 12px; border-radius: 10px; font-weight: 900; }
+
+    .chromeTabs{
+      display:flex;
+      gap:8px;
+      padding: 10px 12px;
+      background: var(--tab);
+      overflow:auto;
+      scrollbar-width: thin;
+      border-top: 1px solid rgba(255,255,255,.03);
+    }
+    .chromeTabs::-webkit-scrollbar{ height: 8px; }
+    .chromeTabs::-webkit-scrollbar-thumb{ background: rgba(255,255,255,.12); border-radius: 999px; }
+
+    .tab{
+      display:flex; align-items:center; gap:10px;
+      padding: 10px 12px;
+      border-radius: 14px;
+      border:1px solid rgba(255,255,255,.08);
+      background: rgba(255,255,255,.05);
+      min-width: 190px;
+      max-width: 260px;
+      cursor:pointer;
+      position:relative;
+      flex: 0 0 auto;
+    }
+    .tab.active{
+      background: linear-gradient(180deg, rgba(255,255,255,.08), transparent), var(--tab2);
+      border-color: rgba(96,165,250,.28);
+      box-shadow: 0 12px 28px rgba(0,0,0,.18);
+    }
+    .tab .dot{
+      width:10px; height:10px; border-radius:999px;
+      background: var(--ok);
+      box-shadow: 0 0 0 6px rgba(34,197,94,.12);
+    }
+    .tab .name{
+      font-weight: 900; letter-spacing:.2px;
+      font-size: 13px;
+      overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+      flex:1;
+    }
+    .tab .sub{
+      display:block;
+      font-size: 11px;
+      color: var(--muted);
+      margin-top:2px;
+      overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+    }
+    .tab .close{
+      width: 26px; height: 26px;
+      border-radius: 10px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.04);
+      display:grid; place-items:center;
+      font-weight: 900;
+      cursor:pointer;
+    }
+    .tab .close:hover{ border-color: rgba(239,68,68,.35); }
+
+    .addTab{
+      min-width:auto;
+      padding: 10px 12px;
+      border-radius: 14px;
+      border:1px dashed rgba(255,255,255,.18);
+      background: rgba(255,255,255,.04);
+      font-weight: 900;
+    }
+
+    /* ===== Main layout ===== */
+    .grid{
+      display:grid;
+      grid-template-columns: 1fr 420px;
+      gap:12px;
+      align-items:start;
+    }
+    @media (max-width: 1020px){
+      .grid{ grid-template-columns: 1fr; }
+    }
+
+    .panel{
+      border:1px solid var(--border);
+      background: linear-gradient(180deg, rgba(255,255,255,.03), transparent), var(--panel);
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .panelHead{
+      padding: 12px 14px;
+      border-bottom:1px solid var(--border);
+      background: linear-gradient(180deg, rgba(255,255,255,.03), transparent), var(--panel2);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+    }
+    .panelHead .title{
+      font-weight: 900;
+      letter-spacing:.2px;
+      font-size: 13px;
+      display:flex;
+      align-items:center;
+      gap:10px;
+    }
+    .hint{ font-size:12px; color: var(--muted); line-height:1.35; }
+    .kbd{
+      display:inline-block;
+      border:1px solid var(--border);
+      border-bottom-width:2px;
+      padding: 2px 7px;
+      border-radius: 8px;
+      background: rgba(255,255,255,.04);
+      color: var(--text);
+      font-weight: 900;
+      font-size: 12px;
+      margin:0 2px;
+    }
+
+    .canvasWrap{
+      padding: 14px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:
+        linear-gradient(45deg, rgba(255,255,255,.06) 25%, transparent 25%) 0 0/26px 26px,
+        linear-gradient(45deg, transparent 75%, rgba(255,255,255,.06) 75%) 0 0/26px 26px,
+        linear-gradient(45deg, transparent 75%, rgba(255,255,255,.06) 75%) 13px 13px/26px 26px,
+        linear-gradient(45deg, rgba(255,255,255,.06) 25%, transparent 25%) 13px 13px/26px 26px;
+      border-top:1px solid var(--border);
+    }
+    canvas{
+      background: transparent;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+      border-radius: 14px;
+      box-shadow: 0 20px 55px rgba(0,0,0,.35);
+      border:1px solid rgba(255,255,255,.12);
+      touch-action: none;
+    }
+
+    .footerNote{
+      padding: 12px 14px;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 12px;
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+
+    .right{ display:flex; flex-direction:column; gap:12px; }
+    .section{ padding: 14px; display:flex; flex-direction:column; gap:12px; }
+
+    .seg{ display:flex; gap:8px; flex-wrap:wrap; }
+    .seg button.active{ border-color: rgba(96,165,250,.45); background: linear-gradient(180deg, rgba(96,165,250,.22), rgba(96,165,250,.05)); }
+
+    .row{ display:grid; grid-template-columns: 1fr 1fr; gap:10px; align-items:center; }
+    .row3{ display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px; align-items:center; }
+    .label{ font-size:12px; color: var(--muted); font-weight: 900; letter-spacing:.2px; }
+    .val{ font-size:12px; color: var(--text); font-weight: 900; text-align:right; }
+
+    .toggle{
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+      padding: 10px 12px;
+      border:1px solid var(--border);
+      border-radius: 12px;
+      background: linear-gradient(180deg, rgba(255,255,255,.05), transparent), rgba(255,255,255,.02);
+      font-size: 13px;
+      font-weight: 900;
+    }
+    .toggle input{ accent-color: var(--accent); }
+
+    /* Colors */
+    .palette{
+      display:grid;
+      grid-template-columns: repeat(10, 1fr);
+      gap:8px;
+    }
+    .swatch{
+      width:100%;
+      aspect-ratio:1/1;
+      border-radius: 10px;
+      border:1px solid rgba(255,255,255,.18);
+      cursor:pointer;
+      box-shadow: 0 10px 22px rgba(0,0,0,.18);
+      position:relative;
+    }
+    .swatch.active::after{
+      content:"";
+      position:absolute;
+      inset: -3px;
+      border-radius: 12px;
+      border:2px solid rgba(96,165,250,.9);
+      box-shadow: 0 0 0 6px rgba(96,165,250,.15);
+      pointer-events:none;
+    }
+
+    /* Layers */
+    .layers{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+    }
+    .layer{
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.04);
+      border-radius: 14px;
+      padding: 10px 10px;
+      display:grid;
+      grid-template-columns: auto 1fr auto;
+      gap:10px;
+      align-items:center;
+    }
+    .layer.active{ border-color: rgba(96,165,250,.38); background: rgba(96,165,250,.08); }
+    .layer .eye{
+      width:32px; height:32px;
+      border-radius: 12px;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.04);
+      display:grid; place-items:center;
+      cursor:pointer;
+      font-weight:900;
+    }
+    .layer .name{
+      display:flex; flex-direction:column;
+      gap:3px;
+      min-width:0;
+      cursor:pointer;
+    }
+    .layer .name b{
+      overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+      font-size:13px;
+    }
+    .layer .name small{ color: var(--muted); font-weight:900; }
+    .layer .ops{
+      display:flex; gap:6px; align-items:center;
+    }
+    .layer .ops button{ padding: 7px 9px; border-radius: 10px; font-size: 12px; font-weight: 900; }
+    .layer input[type="range"]{ width: 110px; }
+
+    /* Frames */
+    .frames{
+      display:flex; flex-direction:column; gap:8px;
+    }
+    .frameRow{
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.04);
+      border-radius: 14px;
+      padding: 10px 10px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+    }
+    .frameRow.active{ border-color: rgba(34,197,94,.35); background: rgba(34,197,94,.10); }
+    .frameRow b{ font-size:13px; }
+    .frameRow .ops{ display:flex; gap:6px; }
+    .frameRow .ops button{ padding: 7px 9px; border-radius: 10px; font-size: 12px; font-weight: 900; }
+
+    input[type="text"]{ width:100%; cursor:text; user-select:text; }
+    input[type="range"]{ width:100%; }
+  </style>
+</head>
+
+<body data-theme="dark">
+  <div class="app">
+
+    <div class="tabsBar">
+      <div class="tabsTop">
+        <div class="brand">
+          <div class="logo">🎨</div>
+          <div>
+            <h1>Pixel Art PRO</h1>
+            <p>Tabs • Layers • Symmetry • Import • Animation</p>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button class="btn" id="themeBtn">🌙 Theme</button>
+          <button class="btn primary" id="newBtn">➕ New</button>
+          <button class="btn ok" id="exportPngBtn">⬇ PNG</button>
+          <button class="btn" id="exportProjectBtn">💾 Save Project</button>
+          <button class="btn" id="importProjectBtn">📂 Load Project</button>
+          <button class="btn danger" id="clearBtn">🗑 Clear</button>
+        </div>
+      </div>
+
+      <div class="chromeTabs" id="tabs"></div>
+    </div>
+
+    <section class="grid">
+      <!-- LEFT: CANVAS -->
+      <div class="panel">
+        <div class="panelHead">
+          <div class="title">🖼️ Canvas</div>
+          <div class="hint">
+            <span class="kbd">Ctrl</span>+<span class="kbd">Z</span> Undo
+            <span class="kbd">Ctrl</span>+<span class="kbd">Y</span> Redo
+            <span class="kbd">B</span> Brush
+            <span class="kbd">E</span> Erase
+            <span class="kbd">G</span> Fill
+            <span class="kbd">I</span> Pick
+            <span class="kbd">Shift</span> Line
+          </div>
+        </div>
+
+        <div class="canvasWrap">
+          <canvas id="canvas" width="512" height="512"></canvas>
+        </div>
+
+        <div class="footerNote">
+          <div>Tab: <b id="tabName">-</b> • Layer: <b id="layerName">-</b> • Frame: <b id="frameName">-</b></div>
+          <div>Coord: <b id="coord">-</b> • Pixel: <b id="pix">-</b> • Zoom: <b id="zoomLabel">-</b> • Grid: <b id="gridLabel">-</b></div>
+        </div>
+      </div>
+
+      <!-- RIGHT: CONTROLS -->
+      <aside class="right">
+
+        <!-- Tools -->
+        <div class="panel">
+          <div class="panelHead">
+            <div class="title">🧰 Tools</div>
+            <div class="hint" id="toolHint">Brush</div>
+          </div>
+
+          <div class="section">
+            <div class="seg" id="toolSeg">
+              <button class="btn mini active" data-tool="brush">✏️ Brush</button>
+              <button class="btn mini" data-tool="eraser">🧽 Eraser</button>
+              <button class="btn mini" data-tool="fill">🪣 Fill</button>
+              <button class="btn mini" data-tool="picker">🎯 Pick</button>
+            </div>
+
+            <div class="row">
+              <div>
+                <div class="label">Grid Size</div>
+                <select id="sizeSel">
+                  <option value="16">16 x 16</option>
+                  <option value="32" selected>32 x 32</option>
+                  <option value="64">64 x 64</option>
+                  <option value="96">96 x 96</option>
+                </select>
+              </div>
+              <div>
+                <div class="label">Brush</div>
+                <select id="brushSel">
+                  <option value="1" selected>1 px</option>
+                  <option value="2">2 px</option>
+                  <option value="3">3 px</option>
+                  <option value="4">4 px</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="row">
+              <label class="toggle"><span>Show Grid</span><input id="gridToggle" type="checkbox" checked /></label>
+              <label class="toggle"><span>Auto-save</span><input id="autosaveToggle" type="checkbox" checked /></label>
+            </div>
+
+            <div class="row">
+              <label class="toggle"><span>Symmetry Vertical</span><input id="symV" type="checkbox" /></label>
+              <label class="toggle"><span>Symmetry Horizontal</span><input id="symH" type="checkbox" /></label>
+            </div>
+
+            <div>
+              <div class="row" style="grid-template-columns: 1fr auto;">
+                <div class="label">Zoom</div>
+                <div class="val" id="zoomVal">16x</div>
+              </div>
+              <input id="zoomRange" type="range" min="8" max="28" value="16" />
+            </div>
+
+            <div class="row3">
+              <button class="btn mini" id="undoBtn">↶ Undo</button>
+              <button class="btn mini" id="redoBtn">↷ Redo</button>
+              <button class="btn mini" id="mirrorBtn" title="Gorizontal mirror (flip whole project)">↔ Flip</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Colors + Import -->
+        <div class="panel">
+          <div class="panelHead">
+            <div class="title">🎨 Colors & Import</div>
+            <div class="hint">Active: <b id="activeHex">#000000</b></div>
+          </div>
+
+          <div class="section">
+            <div class="row">
+              <div>
+                <div class="label">Color Picker</div>
+                <input id="colorInput" type="color" value="#60a5fa" style="width:100%; height:42px; padding:6px; border-radius:12px;" />
+              </div>
+              <div>
+                <div class="label">Quick</div>
+                <button class="btn mini" id="addToPaletteBtn">➕ Add</button>
+              </div>
+            </div>
+
+            <div class="palette" id="palette"></div>
+
+            <div class="row">
+              <button class="btn mini" id="importImgBtn">🖼️ Import PNG → Pixel</button>
+              <button class="btn mini" id="spriteBtn">🎞️ Export SpriteSheet</button>
+            </div>
+
+            <div class="hint">
+              Import PNG: rasm gridga moslab pixelga aylantiriladi va <b>active layer</b>ga qo‘yiladi.
+            </div>
+          </div>
+        </div>
+
+        <!-- Layers -->
+        <div class="panel">
+          <div class="panelHead">
+            <div class="title">🧾 Layers</div>
+            <div class="hint">Active layer ustiga chizasiz</div>
+          </div>
+
+          <div class="section">
+            <div class="row3">
+              <button class="btn mini" id="addLayerBtn">➕ Add</button>
+              <button class="btn mini" id="renameLayerBtn">✏️ Rename</button>
+              <button class="btn mini danger" id="delLayerBtn">🗑 Delete</button>
+            </div>
+            <div class="layers" id="layers"></div>
+          </div>
+        </div>
+
+        <!-- Animation -->
+        <div class="panel">
+          <div class="panelHead">
+            <div class="title">🎞️ Animation</div>
+            <div class="hint">Frame-by-frame</div>
+          </div>
+
+          <div class="section">
+            <div class="row3">
+              <button class="btn mini" id="addFrameBtn">➕ Frame</button>
+              <button class="btn mini" id="captureFrameBtn">📸 Capture</button>
+              <button class="btn mini danger" id="delFrameBtn">🗑 Frame</button>
+            </div>
+
+            <div class="row">
+              <button class="btn mini ok" id="playBtn">▶ Play</button>
+              <button class="btn mini" id="stopBtn">⏸ Stop</button>
+            </div>
+
+            <div>
+              <div class="row" style="grid-template-columns: 1fr auto;">
+                <div class="label">FPS</div>
+                <div class="val" id="fpsVal">8</div>
+              </div>
+              <input id="fpsRange" type="range" min="1" max="24" value="8" />
+            </div>
+
+            <div class="frames" id="frames"></div>
+
+            <div class="hint">
+              <b>Capture</b>: hozirgi layerlar holatini “frame”ga saqlaydi. Play esa frame’larni aylantiradi.
+            </div>
+          </div>
+        </div>
+
+      </aside>
+    </section>
+  </div>
+
+  <!-- Hidden inputs -->
+  <input type="file" id="projectFile" accept="application/json" style="display:none" />
+  <input type="file" id="imgFile" accept="image/png,image/jpeg,image/webp" style="display:none" />
+
+  <script>
+    // =========================
+    // Pixel Art PRO — Tabs/Layers/Symmetry/Import/Animation
+    // =========================
+    const $ = (s) => document.querySelector(s);
+
+    const LS_KEY = "pixel_art_pro_v2";
+
+    const canvas = $("#canvas");
+    const ctx = canvas.getContext("2d");
+    ctx.imageSmoothingEnabled = false;
+
+    // HUD
+    const tabNameEl = $("#tabName");
+    const layerNameEl = $("#layerName");
+    const frameNameEl = $("#frameName");
+    const coordEl = $("#coord");
+    const pixEl = $("#pix");
+    const zoomLabelEl = $("#zoomLabel");
+    const gridLabelEl = $("#gridLabel");
+
+    // Top buttons
+    const themeBtn = $("#themeBtn");
+    const newBtn = $("#newBtn");
+    const exportPngBtn = $("#exportPngBtn");
+    const exportProjectBtn = $("#exportProjectBtn");
+    const importProjectBtn = $("#importProjectBtn");
+    const clearBtn = $("#clearBtn");
+
+    // Tabs
+    const tabsEl = $("#tabs");
+
+    // Tools
+    const toolHint = $("#toolHint");
+    const toolSeg = $("#toolSeg");
+    const sizeSel = $("#sizeSel");
+    const brushSel = $("#brushSel");
+    const gridToggle = $("#gridToggle");
+    const autosaveToggle = $("#autosaveToggle");
+    const symVEl = $("#symV");
+    const symHEl = $("#symH");
+    const zoomRange = $("#zoomRange");
+    const zoomVal = $("#zoomVal");
+    const undoBtn = $("#undoBtn");
+    const redoBtn = $("#redoBtn");
+    const mirrorBtn = $("#mirrorBtn");
+
+    // Colors & Import
+    const colorInput = $("#colorInput");
+    const activeHex = $("#activeHex");
+    const paletteEl = $("#palette");
+    const addToPaletteBtn = $("#addToPaletteBtn");
+    const importImgBtn = $("#importImgBtn");
+    const spriteBtn = $("#spriteBtn");
+
+    // Layers
+    const layersEl = $("#layers");
+    const addLayerBtn = $("#addLayerBtn");
+    const renameLayerBtn = $("#renameLayerBtn");
+    const delLayerBtn = $("#delLayerBtn");
+
+    // Animation
+    const framesEl = $("#frames");
+    const addFrameBtn = $("#addFrameBtn");
+    const captureFrameBtn = $("#captureFrameBtn");
+    const delFrameBtn = $("#delFrameBtn");
+    const playBtn = $("#playBtn");
+    const stopBtn = $("#stopBtn");
+    const fpsRange = $("#fpsRange");
+    const fpsVal = $("#fpsVal");
+
+    // Hidden inputs
+    const projectFile = $("#projectFile");
+    const imgFile = $("#imgFile");
+
+    // ===== Data model =====
+    // appState = { theme, autosave, tabs: [project], activeTabId }
+    // project = { id, name, gridSize, zoom, showGrid, brushSize, tool, symV, symH, activeColor, palette,
+    //             layers:[layer], activeLayerId, undo:[], redo:[],
+    //             frames:[frame], activeFrameId, playing, fps }
+    // layer = { id, name, visible, opacity(0..1), pixels: Array(gridSize*gridSize) where value = hex or null }
+    // frame = { id, name, snapshot: {gridSize, layers:[{id,name,visible,opacity,pixels}], activeLayerId} }
+
+    const uid = () => Math.random().toString(36).slice(2, 9) + "_" + Date.now().toString(36);
+
+    const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+    const hexToRgb = (hex) => {
+      const h = hex.replace("#","").trim();
+      const v = parseInt(h.length===3 ? h.split("").map(x=>x+x).join("") : h, 16);
+      return { r:(v>>16)&255, g:(v>>8)&255, b:v&255 };
+    };
+
+    const DEFAULT_PALETTE = [
+      "#0b1220","#0f172a","#1f2937","#374151","#6b7280",
+      "#ffffff","#fca5a5","#fb7185","#ef4444","#b91c1c",
+      "#fdba74","#fb923c","#f59e0b","#fbbf24","#fde68a",
+      "#86efac","#22c55e","#16a34a","#14532d","#34d399",
+      "#93c5fd","#60a5fa","#2563eb","#1d4ed8","#0ea5e9",
+      "#c4b5fd","#a78bfa","#7c3aed","#6d28d9","#f0abfc",
+      "#f472b6","#db2777","#a21caf","#14b8a6","#06b6d4"
+    ];
+
+    function makeLayer(gridSize, name="Layer"){
+      return {
+        id: uid(),
+        name,
+        visible: true,
+        opacity: 1,
+        pixels: new Array(gridSize*gridSize).fill(null)
+      };
+    }
+
+    function makeProject(name){
+      const id = uid();
+      const gridSize = 32;
+      const base = makeLayer(gridSize, "Base");
+      const top = makeLayer(gridSize, "Details");
+      return {
+        id,
+        name: name || ("Project " + new Date().toLocaleTimeString()),
+        gridSize,
+        zoom: 16,
+        showGrid: true,
+        brushSize: 1,
+        tool: "brush",
+        symV: false,
+        symH: false,
+        activeColor: "#60a5fa",
+        palette: DEFAULT_PALETTE.slice(),
+        layers: [base, top],
+        activeLayerId: top.id,
+        undo: [],
+        redo: [],
+        frames: [
+          { id: uid(), name: "Frame 1", snapshot: null } // snapshot null means "live"
+        ],
+        activeFrameId: null, // null = live editing
+        playing: false,
+        fps: 8
+      };
+    }
+
+    let appState = {
+      theme: "dark",
+      autosave: true,
+      tabs: [ makeProject("Project 1") ],
+      activeTabId: null
+    };
+    appState.activeTabId = appState.tabs[0].id;
+
+    // ===== Persistence =====
+    function saveApp(){
+      if(!appState.autosave) return;
+      localStorage.setItem(LS_KEY, JSON.stringify(appState));
+    }
+    function loadApp(){
+      try{
+        const raw = localStorage.getItem(LS_KEY);
+        if(!raw) return false;
+        const data = JSON.parse(raw);
+        if(!data || !Array.isArray(data.tabs) || !data.tabs.length) return false;
+        appState = data;
+        // minimal sanity
+        if(!appState.activeTabId) appState.activeTabId = appState.tabs[0].id;
+        return true;
+      }catch(e){ return false; }
+    }
+
+    // ===== Active project helpers =====
+    const getProject = (id) => appState.tabs.find(t => t.id === id);
+    const P = () => getProject(appState.activeTabId);
+
+    function idx(gridSize, x, y){ return y * gridSize + x; }
+    function inBounds(gridSize, x, y){ return x>=0 && y>=0 && x<gridSize && y<gridSize; }
+
+    function activeLayer(){
+      const p = P();
+      return p.layers.find(L => L.id === p.activeLayerId) || p.layers[0];
+    }
+
+    function pushUndo(){
+      const p = P();
+      const snap = {
+        gridSize: p.gridSize,
+        layers: p.layers.map(L => ({
+          id: L.id, name: L.name, visible: L.visible, opacity: L.opacity,
+          pixels: L.pixels.slice()
+        })),
+        activeLayerId: p.activeLayerId
+      };
+      p.undo.push(snap);
+      if(p.undo.length > 70) p.undo.shift();
+      p.redo.length = 0;
+    }
+
+    function applySnapshot(snap){
+      const p = P();
+      // If grid size differs, just replace everything to avoid bugs
+      p.gridSize = snap.gridSize;
+      p.layers = snap.layers.map(sL => ({
+        id: sL.id, name: sL.name, visible: sL.visible, opacity: sL.opacity,
+        pixels: sL.pixels.slice()
+      }));
+      p.activeLayerId = snap.activeLayerId;
+      // keep tool settings the same
+      syncControlsFromProject();
+      draw();
+      renderLayers();
+      saveApp();
+    }
+
+    function undo(){
+      const p = P();
+      if(!p.undo.length) return;
+      const current = {
+        gridSize: p.gridSize,
+        layers: p.layers.map(L => ({ id:L.id, name:L.name, visible:L.visible, opacity:L.opacity, pixels:L.pixels.slice() })),
+        activeLayerId: p.activeLayerId
+      };
+      p.redo.push(current);
+      const snap = p.undo.pop();
+      applySnapshot(snap);
+    }
+
+    function redo(){
+      const p = P();
+      if(!p.redo.length) return;
+      const current = {
+        gridSize: p.gridSize,
+        layers: p.layers.map(L => ({ id:L.id, name:L.name, visible:L.visible, opacity:L.opacity, pixels:L.pixels.slice() })),
+        activeLayerId: p.activeLayerId
+      };
+      p.undo.push(current);
+      const snap = p.redo.pop();
+      applySnapshot(snap);
+    }
+
+    // ===== Tabs (Chrome-like) =====
+    function renderTabs(){
+      tabsEl.innerHTML = "";
+
+      appState.tabs.forEach(proj=>{
+        const isActive = proj.id === appState.activeTabId;
+
+        const tab = document.createElement("div");
+        tab.className = "tab" + (isActive ? " active" : "");
+        tab.title = proj.name;
+
+        const dot = document.createElement("div");
+        dot.className = "dot";
+        tab.appendChild(dot);
+
+        const nameWrap = document.createElement("div");
+        nameWrap.className = "name";
+        nameWrap.innerHTML = `
+          <div style="font-weight:900; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escapeHtml(proj.name)}</div>
+          <span class="sub">${proj.gridSize}x${proj.gridSize} • ${proj.layers.length} layer • ${proj.frames.length} frame</span>
+        `;
+        tab.appendChild(nameWrap);
+
+        const close = document.createElement("div");
+        close.className = "close";
+        close.textContent = "×";
+        close.addEventListener("click", (e)=>{
+          e.stopPropagation();
+          closeTab(proj.id);
+        });
+        tab.appendChild(close);
+
+        tab.addEventListener("click", ()=>{
+          appState.activeTabId = proj.id;
+          stopPlayback(); // switch tab stops playback
+          syncControlsFromProject();
+          renderTabs();
+          renderLayers();
+          renderFrames();
+          draw();
+          saveApp();
+        });
+
+        tabsEl.appendChild(tab);
+      });
+
+      const add = document.createElement("button");
+      add.className = "addTab btn";
+      add.textContent = "+";
+      add.title = "New tab";
+      add.addEventListener("click", ()=> createNewTab());
+      tabsEl.appendChild(add);
+    }
+
+    function closeTab(id){
+      if(appState.tabs.length === 1){
+        // keep at least one tab
+        appState.tabs[0] = makeProject("Project 1");
+        appState.activeTabId = appState.tabs[0].id;
+      }else{
+        const idxTab = appState.tabs.findIndex(t=>t.id===id);
+        appState.tabs.splice(idxTab, 1);
+        if(appState.activeTabId === id){
+          const next = appState.tabs[Math.max(0, idxTab-1)];
+          appState.activeTabId = next.id;
+        }
+      }
+      stopPlayback();
+      syncControlsFromProject();
+      renderTabs();
+      renderLayers();
+      renderFrames();
+      draw();
+      saveApp();
+    }
+
+    function createNewTab(){
+      const name = "Project " + (appState.tabs.length + 1);
+      const proj = makeProject(name);
+      appState.tabs.push(proj);
+      appState.activeTabId = proj.id;
+
+      stopPlayback();
+      syncControlsFromProject();
+      renderTabs();
+      renderLayers();
+      renderFrames();
+      draw();
+      saveApp();
+    }
+
+    // ===== Drawing / rendering =====
+    function resizeCanvasCss(){
+      const p = P();
+      canvas.style.width = (p.gridSize * p.zoom) + "px";
+      canvas.style.height = (p.gridSize * p.zoom) + "px";
+      zoomLabelEl.textContent = p.zoom + "x";
+      zoomVal.textContent = p.zoom + "x";
+      gridLabelEl.textContent = p.showGrid ? "ON" : "OFF";
+    }
+
+    function compositeLayersToImageData(targetCtx, gridSize, layers){
+      const img = targetCtx.createImageData(gridSize, gridSize);
+      // start fully transparent
+      for(let i=0;i<img.data.length;i+=4) img.data[i+3]=0;
+
+      // draw from bottom to top
+      for(const L of layers){
+        if(!L.visible) continue;
+        const alpha = clamp(L.opacity, 0, 1);
+
+        for(let y=0; y<gridSize; y++){
+          for(let x=0; x<gridSize; x++){
+            const c = L.pixels[idx(gridSize,x,y)];
+            if(!c) continue;
+
+            const rgb = hexToRgb(c);
+            const i = (y*gridSize + x) * 4;
+
+            // simple alpha blend over img
+            const srcA = alpha;
+            const dstA = img.data[i+3] / 255;
+
+            const outA = srcA + dstA * (1 - srcA);
+            if(outA <= 0){
+              img.data[i+3] = 0;
+              continue;
+            }
+
+            const dstR = img.data[i] / 255;
+            const dstG = img.data[i+1] / 255;
+            const dstB = img.data[i+2] / 255;
+
+            const srcR = rgb.r / 255;
+            const srcG = rgb.g / 255;
+            const srcB = rgb.b / 255;
+
+            const outR = (srcR * srcA + dstR * dstA * (1 - srcA)) / outA;
+            const outG = (srcG * srcA + dstG * dstA * (1 - srcA)) / outA;
+            const outB = (srcB * srcA + dstB * dstA * (1 - srcA)) / outA;
+
+            img.data[i]   = Math.round(outR * 255);
+            img.data[i+1] = Math.round(outG * 255);
+            img.data[i+2] = Math.round(outB * 255);
+            img.data[i+3] = Math.round(outA * 255);
+          }
+        }
+      }
+      return img;
+    }
+
+    function draw(){
+      const p = P();
+
+      // if in playback, we render from active frame snapshots
+      const renderFromFrame = getPlaybackFrameSnapshot();
+      const gridSize = renderFromFrame ? renderFromFrame.gridSize : p.gridSize;
+      const layers = renderFromFrame ? renderFromFrame.layers : p.layers;
+
+      const W = canvas.width;
+      const H = canvas.height;
+      ctx.clearRect(0,0,W,H);
+
+      const cell = W / gridSize;
+
+      // Render composited pixels by scanning per pixel (fast enough for <=96)
+      // We'll draw layers directly onto ctx for speed
+      // (opacity supported)
+      for(const L of layers){
+        if(!L.visible) continue;
+        ctx.globalAlpha = clamp(L.opacity,0,1);
+        for(let y=0;y<gridSize;y++){
+          for(let x=0;x<gridSize;x++){
+            const c = L.pixels[idx(gridSize,x,y)];
+            if(!c) continue;
+            ctx.fillStyle = c;
+            ctx.fillRect(x*cell, y*cell, cell, cell);
+          }
+        }
+      }
+      ctx.globalAlpha = 1;
+
+      if(p.showGrid){
+        ctx.save();
+        ctx.strokeStyle = "rgba(255,255,255,.12)";
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        for(let i=0; i<=gridSize; i++){
+          const pos = i*cell;
+          ctx.moveTo(pos,0); ctx.lineTo(pos,H);
+          ctx.moveTo(0,pos); ctx.lineTo(W,pos);
+        }
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      // HUD names
+      tabNameEl.textContent = p.name;
+      layerNameEl.textContent = activeLayer().name;
+      frameNameEl.textContent = playbackInfoText();
+    }
+
+    function playbackInfoText(){
+      const p = P();
+      if(p.playing) return "Playing…";
+      if(p.activeFrameId) {
+        const fr = p.frames.find(f=>f.id===p.activeFrameId);
+        return fr ? fr.name : "Frame";
+      }
+      return "Live";
+    }
+
+    // ===== Pointer mapping =====
+    function getCellFromEvent(e){
+      const p = P();
+      const rect = canvas.getBoundingClientRect();
+      const clientX = (e.touches ? e.touches[0].clientX : e.clientX);
+      const clientY = (e.touches ? e.touches[0].clientY : e.clientY);
+      const x = clientX - rect.left;
+      const y = clientY - rect.top;
+      const gx = Math.floor(x / p.zoom);
+      const gy = Math.floor(y / p.zoom);
+      return { x: clamp(gx, 0, p.gridSize-1), y: clamp(gy, 0, p.gridSize-1) };
+    }
+
+    // ===== Tools =====
+    let isDown = false;
+    let lastCell = null;
+
+    function setTool(t){
+      const p = P();
+      p.tool = t;
+      toolHint.textContent =
+        t==="brush" ? "Pencil / Brush" :
+        t==="eraser" ? "Eraser (transparent)" :
+        t==="fill" ? "Fill / Bucket" :
+        "Pick color";
+      [...toolSeg.querySelectorAll("button")].forEach(b=>{
+        b.classList.toggle("active", b.dataset.tool === t);
+      });
+      saveApp();
+    }
+
+    function setActiveColor(hex){
+      const p = P();
+      p.activeColor = (hex || "#000000").toLowerCase();
+      colorInput.value = p.activeColor;
+      activeHex.textContent = p.activeColor;
+      highlightPalette();
+      saveApp();
+    }
+
+    function highlightPalette(){
+      const p = P();
+      [...paletteEl.querySelectorAll(".swatch")].forEach(sw=>{
+        sw.classList.toggle("active", sw.dataset.hex === p.activeColor);
+      });
+    }
+
+    function renderPalette(){
+      const p = P();
+      paletteEl.innerHTML = "";
+      p.palette.forEach(hex=>{
+        const d = document.createElement("div");
+        d.className = "swatch";
+        d.style.background = hex;
+        d.dataset.hex = hex.toLowerCase();
+        d.title = hex;
+        d.addEventListener("click", ()=> setActiveColor(hex));
+        paletteEl.appendChild(d);
+      });
+      highlightPalette();
+    }
+
+    function applySymmetryPoints(gridSize, x, y){
+      const p = P();
+      const points = [{x,y}];
+
+      if(p.symV){
+        points.push({ x: gridSize - 1 - x, y });
+      }
+      if(p.symH){
+        points.push({ x, y: gridSize - 1 - y });
+      }
+      if(p.symV && p.symH){
+        points.push({ x: gridSize - 1 - x, y: gridSize - 1 - y });
+      }
+
+      // uniq
+      const seen = new Set();
+      const out = [];
+      for(const pt of points){
+        const k = pt.x + "," + pt.y;
+        if(!seen.has(k)){ seen.add(k); out.push(pt); }
+      }
+      return out;
+    }
+
+    function drawBrushAt(layer, x, y, colorOrNull){
+      const p = P();
+      const r = p.brushSize - 1;
+      for(let dy=-r; dy<=r; dy++){
+        for(let dx=-r; dx<=r; dx++){
+          const xx = x + dx;
+          const yy = y + dy;
+          if(!inBounds(p.gridSize, xx, yy)) continue;
+
+          const pts = applySymmetryPoints(p.gridSize, xx, yy);
+          for(const pt of pts){
+            layer.pixels[idx(p.gridSize, pt.x, pt.y)] = colorOrNull;
+          }
+        }
+      }
+    }
+
+    function lineDraw(layer, a, b, colorOrNull){
+      const p = P();
+      let x0=a.x, y0=a.y, x1=b.x, y1=b.y;
+      const dx = Math.abs(x1-x0), dy = Math.abs(y1-y0);
+      const sx = x0 < x1 ? 1 : -1;
+      const sy = y0 < y1 ? 1 : -1;
+      let err = dx - dy;
+
+      while(true){
+        drawBrushAt(layer, x0, y0, colorOrNull);
+        if(x0===x1 && y0===y1) break;
+        const e2 = 2*err;
+        if(e2 > -dy){ err -= dy; x0 += sx; }
+        if(e2 < dx){ err += dx; y0 += sy; }
+      }
+    }
+
+    function floodFill(layer, startX, startY, newColorOrNull){
+      const p = P();
+      const target = layer.pixels[idx(p.gridSize, startX, startY)] ?? null;
+      if(target === newColorOrNull) return;
+
+      const q = [[startX,startY]];
+      const seen = new Set();
+      const key = (x,y)=> (y<<16) ^ x;
+
+      while(q.length){
+        const [x,y] = q.pop();
+        const k = key(x,y);
+        if(seen.has(k)) continue;
+        seen.add(k);
+        if(!inBounds(p.gridSize, x, y)) continue;
+
+        const cur = layer.pixels[idx(p.gridSize,x,y)] ?? null;
+        if(cur !== target) continue;
+
+        // fill on symmetry points too? For fill it's weird; better only main.
+        layer.pixels[idx(p.gridSize,x,y)] = newColorOrNull;
+
+        q.push([x+1,y]); q.push([x-1,y]); q.push([x,y+1]); q.push([x,y-1]);
+      }
+    }
+
+    function pickColorAt(x,y){
+      const p = P();
+      // pick from topmost visible layer
+      for(let i=p.layers.length-1; i>=0; i--){
+        const L = p.layers[i];
+        if(!L.visible) continue;
+        const c = L.pixels[idx(p.gridSize,x,y)];
+        if(c){ setActiveColor(c); return; }
+      }
+    }
+
+    function updateHud(cell){
+      const p = P();
+      coordEl.textContent = `${cell.x},${cell.y}`;
+      const L = activeLayer();
+      pixEl.textContent = L.pixels[idx(p.gridSize, cell.x, cell.y)] ?? "transparent";
+    }
+
+    function applyToolAt(cell, opts){
+      const p = P();
+      if(p.activeFrameId || p.playing) return; // lock editing when not live
+      const L = activeLayer();
+
+      if(p.tool === "picker"){
+        pickColorAt(cell.x, cell.y);
+        return;
+      }
+
+      const colorOrNull = (p.tool === "eraser") ? null : p.activeColor;
+
+      if(p.tool === "fill"){
+        floodFill(L, cell.x, cell.y, colorOrNull);
+        return;
+      }
+
+      if(opts.shift && lastCell){
+        lineDraw(L, lastCell, cell, colorOrNull);
+      }else{
+        drawBrushAt(L, cell.x, cell.y, colorOrNull);
+      }
+      lastCell = {x:cell.x, y:cell.y};
+    }
+
+    function pointerDown(e){
+      e.preventDefault();
+      const p = P();
+      if(p.activeFrameId || p.playing) return;
+
+      isDown = true;
+      pushUndo();
+
+      const cell = getCellFromEvent(e);
+      updateHud(cell);
+      applyToolAt(cell, { shift: e.shiftKey });
+      draw();
+      saveApp();
+    }
+    function pointerMove(e){
+      const cell = getCellFromEvent(e);
+      updateHud(cell);
+      if(!isDown) return;
+      e.preventDefault();
+
+      applyToolAt(cell, { shift: e.shiftKey });
+      draw();
+      saveApp();
+    }
+    function pointerUp(){
+      isDown = false;
+      lastCell = null;
+    }
+
+    // ===== Layers UI =====
+    function renderLayers(){
+      const p = P();
+      layersEl.innerHTML = "";
+
+      p.layers.slice().reverse().forEach(L => {
+        const realIndex = p.layers.findIndex(x => x.id === L.id);
+
+        const row = document.createElement("div");
+        row.className = "layer" + (L.id === p.activeLayerId ? " active" : "");
+
+        const eye = document.createElement("div");
+        eye.className = "eye";
+        eye.textContent = L.visible ? "👁" : "🚫";
+        eye.title = "Show/Hide";
+        eye.addEventListener("click", (e)=>{
+          e.stopPropagation();
+          pushUndo();
+          L.visible = !L.visible;
+          renderLayers();
+          draw();
+          saveApp();
+        });
+
+        const name = document.createElement("div");
+        name.className = "name";
+        name.innerHTML = `<b>${escapeHtml(L.name)}</b><small>Opacity: ${Math.round(L.opacity*100)}%</small>`;
+        name.addEventListener("click", ()=>{
+          p.activeLayerId = L.id;
+          renderLayers();
+          draw();
+          saveApp();
+        });
+
+        const ops = document.createElement("div");
+        ops.className = "ops";
+
+        const up = document.createElement("button");
+        up.className = "btn mini";
+        up.textContent = "▲";
+        up.title = "Move up";
+        up.addEventListener("click", (e)=>{
+          e.stopPropagation();
+          if(realIndex >= p.layers.length-1) return;
+          pushUndo();
+          const tmp = p.layers[realIndex+1];
+          p.layers[realIndex+1] = p.layers[realIndex];
+          p.layers[realIndex] = tmp;
+          renderLayers(); draw(); saveApp();
+        });
+
+        const down = document.createElement("button");
+        down.className = "btn mini";
+        down.textContent = "▼";
+        down.title = "Move down";
+        down.addEventListener("click", (e)=>{
+          e.stopPropagation();
+          if(realIndex <= 0) return;
+          pushUndo();
+          const tmp = p.layers[realIndex-1];
+          p.layers[realIndex-1] = p.layers[realIndex];
+          p.layers[realIndex] = tmp;
+          renderLayers(); draw(); saveApp();
+        });
+
+        const op = document.createElement("input");
+        op.type = "range";
+        op.min = "0";
+        op.max = "1";
+        op.step = "0.05";
+        op.value = String(L.opacity);
+        op.title = "Opacity";
+        op.addEventListener("input", (e)=>{
+          pushUndo();
+          L.opacity = parseFloat(e.target.value);
+          renderLayers(); draw(); saveApp();
+        });
+
+        ops.appendChild(up);
+        ops.appendChild(down);
+        ops.appendChild(op);
+
+        row.appendChild(eye);
+        row.appendChild(name);
+        row.appendChild(ops);
+
+        layersEl.appendChild(row);
+      });
+    }
+
+    function addLayer(){
+      const p = P();
+      pushUndo();
+      const L = makeLayer(p.gridSize, "Layer " + (p.layers.length+1));
+      p.layers.push(L);
+      p.activeLayerId = L.id;
+      renderLayers();
+      draw();
+      saveApp();
+    }
+
+    function renameLayer(){
+      const p = P();
+      const L = activeLayer();
+      const nn = prompt("Layer nomini yoz:", L.name);
+      if(!nn) return;
+      pushUndo();
+      L.name = nn.trim().slice(0, 40);
+      renderLayers();
+      draw();
+      saveApp();
+    }
+
+    function deleteLayer(){
+      const p = P();
+      if(p.layers.length <= 1){
+        alert("Kamida 1 layer qolishi kerak.");
+        return;
+      }
+      const L = activeLayer();
+      if(!confirm(`"${L.name}" layer o‘chirilsinmi?`)) return;
+      pushUndo();
+      p.layers = p.layers.filter(x=>x.id !== L.id);
+      p.activeLayerId = p.layers[p.layers.length-1].id;
+      renderLayers();
+      draw();
+      saveApp();
+    }
+
+    // ===== Frames / animation =====
+    let playTimer = null;
+    let playIndex = 0;
+
+    function renderFrames(){
+      const p = P();
+      framesEl.innerHTML = "";
+
+      // "Live" pseudo button
+      const live = document.createElement("div");
+      live.className = "frameRow" + (!p.activeFrameId && !p.playing ? " active" : "");
+      live.innerHTML = `<b>Live</b><span class="hint">Edit ON</span>`;
+      live.addEventListener("click", ()=>{
+        p.activeFrameId = null;
+        stopPlayback();
+        renderFrames();
+        draw();
+        saveApp();
+      });
+      framesEl.appendChild(live);
+
+      p.frames.forEach((fr, i)=>{
+        const row = document.createElement("div");
+        row.className = "frameRow" + (p.activeFrameId === fr.id && !p.playing ? " active" : "");
+        const left = document.createElement("div");
+        left.innerHTML = `<b>${escapeHtml(fr.name)}</b><div class="hint">${fr.snapshot ? "Captured" : "Empty (use Capture)"} • #${i+1}</div>`;
+
+        const ops = document.createElement("div");
+        ops.className = "ops";
+
+        const sel = document.createElement("button");
+        sel.className = "btn mini";
+        sel.textContent = "View";
+        sel.addEventListener("click", (e)=>{
+          e.stopPropagation();
+          p.activeFrameId = fr.id;
+          stopPlayback();
+          renderFrames();
+          draw();
+          saveApp();
+        });
+
+        const up = document.createElement("button");
+        up.className = "btn mini";
+        up.textContent = "▲";
+        up.title = "Move up";
+        up.addEventListener("click", (e)=>{
+          e.stopPropagation();
+          if(i<=0) return;
+          const tmp = p.frames[i-1];
+          p.frames[i-1] = p.frames[i];
+          p.frames[i] = tmp;
+          renderFrames(); saveApp();
+        });
+
+        const down = document.createElement("button");
+        down.className = "btn mini";
+        down.textContent = "▼";
+        down.title = "Move down";
+        down.addEventListener("click", (e)=>{
+          e.stopPropagation();
+          if(i>=p.frames.length-1) return;
+          const tmp = p.frames[i+1];
+          p.frames[i+1] = p.frames[i];
+          p.frames[i] = tmp;
+          renderFrames(); saveApp();
+        });
+
+        ops.appendChild(sel);
+        ops.appendChild(up);
+        ops.appendChild(down);
+
+        row.appendChild(left);
+        row.appendChild(ops);
+        framesEl.appendChild(row);
+      });
+    }
+
+    function addFrame(){
+      const p = P();
+      const fr = { id: uid(), name: "Frame " + (p.frames.length+1), snapshot: null };
+      p.frames.push(fr);
+      p.activeFrameId = fr.id;
+      stopPlayback();
+      renderFrames();
+      draw();
+      saveApp();
+    }
+
+    function captureFrame(){
+      const p = P();
+      if(!p.activeFrameId){
+        alert("Avval bir frame tanlang (View) yoki Frame qo‘shing.");
+        return;
+      }
+      const fr = p.frames.find(f=>f.id===p.activeFrameId);
+      if(!fr) return;
+
+      // capture current project state (all layers)
+      fr.snapshot = {
+        gridSize: p.gridSize,
+        layers: p.layers.map(L => ({
+          id:L.id, name:L.name, visible:L.visible, opacity:L.opacity, pixels: L.pixels.slice()
+        })),
+        activeLayerId: p.activeLayerId
+      };
+      renderFrames();
+      draw();
+      saveApp();
+    }
+
+    function deleteFrame(){
+      const p = P();
+      if(!p.activeFrameId){
+        alert("O‘chirish uchun frame tanlang.");
+        return;
+      }
+      if(!confirm("Frame o‘chirilsinmi?")) return;
+      const id = p.activeFrameId;
+      p.frames = p.frames.filter(f=>f.id!==id);
+      p.activeFrameId = null;
+      stopPlayback();
+      renderFrames();
+      draw();
+      saveApp();
+    }
+
+    function getPlaybackFrameSnapshot(){
+      const p = P();
+
+      if(p.playing){
+        const fr = p.frames[playIndex % Math.max(1, p.frames.length)];
+        return fr && fr.snapshot ? fr.snapshot : null;
+      }
+
+      if(p.activeFrameId){
+        const fr = p.frames.find(f=>f.id===p.activeFrameId);
+        return fr && fr.snapshot ? fr.snapshot : null;
+      }
+
+      return null;
+    }
+
+    function startPlayback(){
+      const p = P();
+      if(!p.frames.length){
+        alert("Frame yo‘q.");
+        return;
+      }
+      p.playing = true;
+      p.activeFrameId = null; // playing uses list order
+      playIndex = 0;
+
+      const step = () => {
+        draw();
+        playIndex = (playIndex + 1) % p.frames.length;
+      };
+      stopPlayback();
+      step();
+      playTimer = setInterval(step, Math.max(1, Math.round(1000 / p.fps)));
+      renderFrames();
+      saveApp();
+    }
+
+    function stopPlayback(){
+      const p = P();
+      p.playing = false;
+      if(playTimer){ clearInterval(playTimer); playTimer = null; }
+      draw();
+      renderFrames();
+      saveApp();
+    }
+
+    // ===== Export PNG (composited) =====
+    function exportPNG(){
+      const p = P();
+      // export from LIVE state (not frame view)
+      const gridSize = p.gridSize;
+
+      const off = document.createElement("canvas");
+      off.width = gridSize;
+      off.height = gridSize;
+      const octx = off.getContext("2d");
+      octx.imageSmoothingEnabled = false;
+
+      const img = compositeLayersToImageData(octx, gridSize, p.layers);
+      octx.putImageData(img, 0, 0);
+
+      // scale up for nice result
+      const scale = 16;
+      const out = document.createElement("canvas");
+      out.width = gridSize * scale;
+      out.height = gridSize * scale;
+      const outCtx = out.getContext("2d");
+      outCtx.imageSmoothingEnabled = false;
+      outCtx.drawImage(off, 0, 0, out.width, out.height);
+
+      const a = document.createElement("a");
+      a.href = out.toDataURL("image/png");
+      a.download = `${safeFile(p.name)}_${gridSize}x${gridSize}.png`;
+      a.click();
+    }
+
+    // ===== Export sprite sheet (frames) =====
+    function exportSpriteSheet(){
+      const p = P();
+      if(!p.frames.length){
+        alert("Frame yo‘q.");
+        return;
+      }
+
+      // Use captured snapshots; if snapshot missing -> use live state
+      const gridSize = p.gridSize;
+      const frames = p.frames.map(fr => fr.snapshot ? fr.snapshot : {
+        gridSize: p.gridSize,
+        layers: p.layers.map(L => ({...L, pixels:L.pixels.slice()})),
+        activeLayerId: p.activeLayerId
+      });
+
+      const off = document.createElement("canvas");
+      off.width = gridSize * frames.length;
+      off.height = gridSize;
+      const octx = off.getContext("2d");
+      octx.imageSmoothingEnabled = false;
+
+      for(let i=0;i<frames.length;i++){
+        const snap = frames[i];
+        const c = document.createElement("canvas");
+        c.width = gridSize; c.height = gridSize;
+        const cctx = c.getContext("2d");
+        cctx.imageSmoothingEnabled = false;
+
+        const img = compositeLayersToImageData(cctx, gridSize, snap.layers);
+        cctx.putImageData(img, 0, 0);
+        octx.drawImage(c, i*gridSize, 0);
+      }
+
+      // scale up
+      const scale = 12;
+      const out = document.createElement("canvas");
+      out.width = off.width * scale;
+      out.height = off.height * scale;
+      const outCtx = out.getContext("2d");
+      outCtx.imageSmoothingEnabled = false;
+      outCtx.drawImage(off, 0, 0, out.width, out.height);
+
+      const a = document.createElement("a");
+      a.href = out.toDataURL("image/png");
+      a.download = `${safeFile(p.name)}_spritesheet.png`;
+      a.click();
+    }
+
+    // ===== Import image to pixels =====
+    async function importImageToActiveLayer(file){
+      const p = P();
+      if(p.activeFrameId || p.playing){
+        alert("Live rejimga qayting (Live) — keyin import qiling.");
+        return;
+      }
+      const L = activeLayer();
+
+      const img = await loadImage(file);
+      const gridSize = p.gridSize;
+
+      // draw image scaled to gridSize x gridSize
+      const tmp = document.createElement("canvas");
+      tmp.width = gridSize;
+      tmp.height = gridSize;
+      const tctx = tmp.getContext("2d");
+      tctx.imageSmoothingEnabled = true; // for downscale
+      tctx.clearRect(0,0,gridSize,gridSize);
+      tctx.drawImage(img, 0, 0, gridSize, gridSize);
+
+      const data = tctx.getImageData(0,0,gridSize,gridSize).data;
+
+      pushUndo();
+      for(let y=0; y<gridSize; y++){
+        for(let x=0; x<gridSize; x++){
+          const i = (y*gridSize + x) * 4;
+          const a = data[i+3];
+          if(a < 30){
+            L.pixels[idx(gridSize,x,y)] = null;
+          }else{
+            const r = data[i], g = data[i+1], b = data[i+2];
+            L.pixels[idx(gridSize,x,y)] = rgbToHex(r,g,b);
+          }
+        }
+      }
+
+      renderLayers();
+      draw();
+      saveApp();
+    }
+
+    function rgbToHex(r,g,b){
+      const to = (v)=> v.toString(16).padStart(2,"0");
+      return "#" + to(r) + to(g) + to(b);
+    }
+
+    function loadImage(file){
+      return new Promise((resolve, reject)=>{
+        const url = URL.createObjectURL(file);
+        const img = new Image();
+        img.onload = ()=> { URL.revokeObjectURL(url); resolve(img); };
+        img.onerror = ()=> { URL.revokeObjectURL(url); reject(new Error("Image load failed")); };
+        img.src = url;
+      });
+    }
+
+    // ===== Project save/load =====
+    function exportProject(){
+      const data = {
+        v: 2,
+        app: {
+          theme: appState.theme,
+          autosave: appState.autosave
+        },
+        project: P()
+      };
+      const blob = new Blob([JSON.stringify(data)], {type:"application/json"});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = safeFile(P().name) + ".json";
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function importProjectFromFile(file){
+      const reader = new FileReader();
+      reader.onload = () => {
+        try{
+          const data = JSON.parse(reader.result);
+          if(!data || !data.project) throw new Error("Format xato");
+          const proj = data.project;
+
+          // minimal fix
+          if(!proj.id) proj.id = uid();
+          if(!Array.isArray(proj.layers) || !proj.layers.length) throw new Error("Layer topilmadi");
+          if(!Array.isArray(proj.frames)) proj.frames = [{id:uid(), name:"Frame 1", snapshot:null}];
+          if(!proj.palette) proj.palette = DEFAULT_PALETTE.slice();
+          if(!proj.activeColor) proj.activeColor = "#60a5fa";
+
+          appState.tabs.push(proj);
+          appState.activeTabId = proj.id;
+
+          stopPlayback();
+          syncControlsFromProject();
+          renderTabs();
+          renderPalette();
+          renderLayers();
+          renderFrames();
+          draw();
+          saveApp();
+        }catch(err){
+          alert("Project yuklashda xatolik: " + err.message);
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    // ===== Misc actions =====
+    function clearProject(){
+      const p = P();
+      if(p.activeFrameId || p.playing){
+        alert("Live rejimga qayting (Live) — keyin Clear qiling.");
+        return;
+      }
+      if(!confirm("Hamma layerlar tozalansinmi?")) return;
+      pushUndo();
+      for(const L of p.layers) L.pixels.fill(null);
+      draw();
+      saveApp();
+    }
+
+    function flipProjectHorizontal(){
+      const p = P();
+      if(p.activeFrameId || p.playing){
+        alert("Live rejimga qayting (Live) — keyin Flip qiling.");
+        return;
+      }
+      pushUndo();
+      const n = p.gridSize;
+      for(const L of p.layers){
+        const out = new Array(n*n).fill(null);
+        for(let y=0; y<n; y++){
+          for(let x=0; x<n; x++){
+            out[idx(n, n-1-x, y)] = L.pixels[idx(n,x,y)];
+          }
+        }
+        L.pixels = out;
+      }
+      draw();
+      saveApp();
+    }
+
+    // ===== Sync UI from active project =====
+    function syncControlsFromProject(){
+      const p = P();
+
+      // theme
+      document.body.setAttribute("data-theme", appState.theme);
+      themeBtn.textContent = (appState.theme === "dark") ? "🌙 Theme" : "☀️ Theme";
+
+      // tools
+      sizeSel.value = String(p.gridSize);
+      brushSel.value = String(p.brushSize);
+      gridToggle.checked = !!p.showGrid;
+      autosaveToggle.checked = !!appState.autosave;
+
+      symVEl.checked = !!p.symV;
+      symHEl.checked = !!p.symH;
+
+      zoomRange.value = String(p.zoom);
+
+      setTool(p.tool);
+      setActiveColor(p.activeColor);
+
+      renderPalette();
+      resizeCanvasCss();
+    }
+
+    // ===== Escape / filename =====
+    function escapeHtml(s){
+      return String(s).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;");
+    }
+    function safeFile(s){
+      return String(s).trim().replace(/[\\\/:*?"<>|]+/g, "_").slice(0, 60) || "pixel_art";
+    }
+
+    // ===== Wire up events =====
+    // Canvas pointer
+    canvas.addEventListener("mousedown", pointerDown);
+    window.addEventListener("mousemove", (e)=>{
+      if(!isDown) return;
+      if(e.target !== canvas && !canvas.contains(e.target)) return;
+      pointerMove(e);
+    });
+    window.addEventListener("mouseup", pointerUp);
+
+    canvas.addEventListener("touchstart", pointerDown, {passive:false});
+    canvas.addEventListener("touchmove", pointerMove, {passive:false});
+    canvas.addEventListener("touchend", pointerUp);
+    canvas.addEventListener("contextmenu", (e)=> e.preventDefault());
+
+    // Hover HUD
+    canvas.addEventListener("mousemove", (e)=>{
+      const cell = getCellFromEvent(e);
+      updateHud(cell);
+    });
+
+    // Tool seg
+    toolSeg.addEventListener("click", (e)=>{
+      const btn = e.target.closest("button");
+      if(!btn) return;
+      setTool(btn.dataset.tool);
+    });
+
+    sizeSel.addEventListener("change", ()=>{
+      const p = P();
+      if(p.activeFrameId || p.playing){
+        alert("Live rejimga qayting (Live) — keyin grid o‘zgartiring.");
+        sizeSel.value = String(p.gridSize);
+        return;
+      }
+      pushUndo();
+      const oldSize = p.gridSize;
+      const newSize = parseInt(sizeSel.value, 10);
+      const oldLayers = p.layers.map(L => ({...L, pixels: L.pixels.slice()}));
+
+      p.gridSize = newSize;
+
+      // remap each layer nearest
+      for(const L of p.layers){
+        const old = oldLayers.find(x=>x.id===L.id).pixels;
+        const out = new Array(newSize*newSize).fill(null);
+        for(let y=0; y<newSize; y++){
+          for(let x=0; x<newSize; x++){
+            const ox = Math.floor(x * oldSize / newSize);
+            const oy = Math.floor(y * oldSize / newSize);
+            out[idx(newSize,x,y)] = old[oy*oldSize + ox] ?? null;
+          }
+        }
+        L.pixels = out;
+      }
+
+      resizeCanvasCss();
+      renderTabs();
+      renderLayers();
+      draw();
+      saveApp();
+    });
+
+    brushSel.addEventListener("change", ()=>{
+      const p = P();
+      p.brushSize = parseInt(brushSel.value, 10);
+      saveApp();
+    });
+
+    gridToggle.addEventListener("change", ()=>{
+      const p = P();
+      p.showGrid = gridToggle.checked;
+      resizeCanvasCss();
+      draw();
+      saveApp();
+    });
+
+    autosaveToggle.addEventListener("change", ()=>{
+      appState.autosave = autosaveToggle.checked;
+      saveApp();
+    });
+
+    symVEl.addEventListener("change", ()=>{ P().symV = symVEl.checked; saveApp(); });
+    symHEl.addEventListener("change", ()=>{ P().symH = symHEl.checked; saveApp(); });
+
+    zoomRange.addEventListener("input", ()=>{
+      const p = P();
+      p.zoom = parseInt(zoomRange.value, 10);
+      resizeCanvasCss();
+      draw();
+      saveApp();
+    });
+
+    colorInput.addEventListener("input", ()=> setActiveColor(colorInput.value));
+
+    addToPaletteBtn.addEventListener("click", ()=>{
+      const p = P();
+      const hex = p.activeColor.toLowerCase();
+      if(!p.palette.includes(hex)){
+        p.palette.unshift(hex);
+        if(p.palette.length > 60) p.palette.pop();
+        renderPalette();
+        saveApp();
+      }
+    });
+
+    undoBtn.addEventListener("click", undo);
+    redoBtn.addEventListener("click", redo);
+    mirrorBtn.addEventListener("click", flipProjectHorizontal);
+
+    // Keyboard shortcuts
+    window.addEventListener("keydown", (e)=>{
+      const k = e.key.toLowerCase();
+      if(e.ctrlKey && k === "z"){ e.preventDefault(); undo(); return; }
+      if(e.ctrlKey && (k === "y" || (e.shiftKey && k === "z"))){ e.preventDefault(); redo(); return; }
+      if(k === "b"){ setTool("brush"); }
+      if(k === "e"){ setTool("eraser"); }
+      if(k === "g"){ setTool("fill"); }
+      if(k === "i"){ setTool("picker"); }
+    });
+
+    // Top buttons
+    themeBtn.addEventListener("click", ()=>{
+      appState.theme = (appState.theme === "dark") ? "light" : "dark";
+      syncControlsFromProject();
+      renderTabs();
+      saveApp();
+    });
+
+    newBtn.addEventListener("click", createNewTab);
+
+    clearBtn.addEventListener("click", clearProject);
+
+    exportPngBtn.addEventListener("click", exportPNG);
+
+    exportProjectBtn.addEventListener("click", exportProject);
+
+    importProjectBtn.addEventListener("click", ()=> projectFile.click());
+    projectFile.addEventListener("change", (e)=>{
+      const f = e.target.files && e.target.files[0];
+      if(f) importProjectFromFile(f);
+      projectFile.value = "";
+    });
+
+    // Layers buttons
+    addLayerBtn.addEventListener("click", addLayer);
+    renameLayerBtn.addEventListener("click", renameLayer);
+    delLayerBtn.addEventListener("click", deleteLayer);
+
+    // Import image
+    importImgBtn.addEventListener("click", ()=> imgFile.click());
+    imgFile.addEventListener("change", async (e)=>{
+      const f = e.target.files && e.target.files[0];
+      if(f) await importImageToActiveLayer(f);
+      imgFile.value = "";
+    });
+
+    // Animation buttons
+    fpsRange.addEventListener("input", ()=>{
+      const p = P();
+      p.fps = parseInt(fpsRange.value, 10);
+      fpsVal.textContent = String(p.fps);
+      if(p.playing){
+        startPlayback(); // restart with new fps
+      }else{
+        saveApp();
+      }
+    });
+
+    addFrameBtn.addEventListener("click", addFrame);
+    captureFrameBtn.addEventListener("click", captureFrame);
+    delFrameBtn.addEventListener("click", deleteFrame);
+    playBtn.addEventListener("click", startPlayback);
+    stopBtn.addEventListener("click", stopPlayback);
+    spriteBtn.addEventListener("click", exportSpriteSheet);
+
+    // ===== Init =====
+    (function init(){
+      loadApp();
+      // ensure active exists
+      if(!getProject(appState.activeTabId)) appState.activeTabId = appState.tabs[0].id;
+
+      fpsVal.textContent = String(P().fps);
+      fpsRange.value = String(P().fps);
+
+      syncControlsFromProject();
+      renderTabs();
+      renderPalette();
+      renderLayers();
+      renderFrames();
+      draw();
+      saveApp();
+    })();
+  </script>
+</body>
+</html>
